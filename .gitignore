@@ -1,3 +1,9 @@
+# assignments
+assignment_*
+
+# assignment csv data
+*.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
