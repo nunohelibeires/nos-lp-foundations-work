@@ -1,7 +1,8 @@
+"""Module for cleaning life expectancy data."""
+
 import argparse
 import pandas as pd
 
-# TODO: cleaning further the region column
 
 def clean_data(region: str) -> None:
     """ Clean the data for a given region.

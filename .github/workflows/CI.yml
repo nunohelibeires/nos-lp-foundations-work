@@ -43,8 +43,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas
-        pip install pylint
+        pip install pandas pylint pytest
 
     - name: Run pylint
       run: |
