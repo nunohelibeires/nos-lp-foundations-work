@@ -1,13 +1,15 @@
+import argparse
 import pandas as pd
 
+# TODO: cleaning further the region column
 
-def clean_data() -> None:
+def clean_data(region: str) -> None:
     data_path = 'life_expectancy/data'
     df = _load_data(data_path)
     df = _melt_table(df)
     df = _clean_year_value_cols(df)
-    df = _select_PT_region(df)
-    _save_data_csv(data_path, df)
+    df = _select_region(df, region)
+    _save_data_csv(data_path, df, region)
 
 def _load_data(data_path: str) -> pd.DataFrame:
     """Load the data from the data folder.
@@ -48,11 +50,11 @@ def _clean_year_value_cols(df: pd.DataFrame) -> pd.DataFrame:
         df (pd.DataFrame): The data with cleaned year and value columns.
     """
     # Ensure year is an integer
-    df['year'] = df['year'].str.extract('(\d+)', expand=False)
+    df['year'] = df['year'].str.extract(r'(\d+)', expand=False)
     df['year'] = df['year'].astype(int)
 
     # Ensure value is a float
-    df['value'] = df['value'].str.extract('(\d+.\d+)', expand=False)
+    df['value'] = df['value'].str.extract(r'(\d+.\d+)', expand=False)
     df['value'] = df['value'].astype(float)
 
     # drop rows with missing values
@@ -60,22 +62,37 @@ def _clean_year_value_cols(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def _select_PT_region(df: pd.DataFrame) -> pd.DataFrame:
-    """Select only the PT region.
+def _select_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Select the region.
 
     Args:
         df (pd.DataFrame): The data.
+        region (str): The region to select.
 
     Returns:
-        df (pd.DataFrame): The data with only the PT region.
+        df (pd.DataFrame): The data with only the specified region.
+
+    Raises:
+        ValueError: If the region is not in the data.
     """
-    df = df[df['region'] == 'PT']
+    if region not in df['region'].unique():
+        raise ValueError(f"The region '{region}' is not found in the data. Please choose from {df['region'].unique().tolist()}")
+    
+    df = df[df['region'] == region]
+
     return df
 
-def _save_data_csv(data_path: str, df: pd.DataFrame) -> None:
+def _save_data_csv(data_path: str, df: pd.DataFrame, region: str) -> None:
     """Save the data to a csv file.
 
     Args:
         df (pd.DataFrame): The data.
     """
-    df.to_csv(f'{data_path}/pt_life_expectancy.csv', index=False)
+    df.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
+
+if __name__ == '__main__': # pragma: no cover
+    parser = argparse.ArgumentParser(description='Clean the data.')
+    parser.add_argument('-r', '--region', type=str, default='PT', help='The region to select. Defaults to PT.')
+    args = parser.parse_args()
+
+    clean_data(args.region)
