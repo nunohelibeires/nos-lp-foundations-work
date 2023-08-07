@@ -4,95 +4,109 @@ import pandas as pd
 # TODO: cleaning further the region column
 
 def clean_data(region: str) -> None:
+    """ Clean the data for a given region.
+
+    Args:
+        region: the name of the region to clean
+    """
     data_path = 'life_expectancy/data'
-    df = _load_data(data_path)
-    df = _melt_table(df)
-    df = _clean_year_value_cols(df)
-    df = _select_region(df, region)
-    _save_data_csv(data_path, df, region)
+    full_data = _load_data(data_path)
+    full_data = _melt_table(full_data)
+    full_data = _clean_year_value_cols(full_data)
+    region_data = _select_region(full_data, region)
+    _save_data_csv(data_path, region_data, region)
 
 def _load_data(data_path: str) -> pd.DataFrame:
     """Load the data from the data folder.
 
     Returns:
-        df (pd.DataFrame): The data.
+        data (pd.DataFrame): The data.
     """
-    df = pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
-    return df
+    data = pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
+    return data
 
-def _melt_table(df: pd.DataFrame) -> pd.DataFrame:
+def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to long format.
     
     Args:
-        df (pd.DataFrame): The data.
+        data (pd.DataFrame): The data.
         
     Returns:
-        df (pd.DataFrame): The data in long format.
+        data (pd.DataFrame): The data in long format.
     """
 
     # clean column names
-    df[['unit', 'sex', 'age', 'region']] = df['unit,sex,age,geo\\time'].str.split(',', expand=True)
-    df.drop('unit,sex,age,geo\\time', axis=1, inplace=True)
+    data[['unit', 'sex', 'age', 'region']] = data['unit,sex,age,geo\\time'].str.split(
+        ',', expand=True
+    )
+    data.drop('unit,sex,age,geo\\time', axis=1, inplace=True)
 
     # melt table
-    df = df.melt(id_vars=['unit', 'sex', 'age', 'region'], var_name='year', value_name='value')
+    data = data.melt(id_vars=['unit', 'sex', 'age', 'region'], var_name='year', value_name='value')
 
-    return df
+    return data
 
-def _clean_year_value_cols(df: pd.DataFrame) -> pd.DataFrame:
+def _clean_year_value_cols(data: pd.DataFrame) -> pd.DataFrame:
     """Clean the year and value columns, ensure they are of the correct type and
         drop rows with missing values.
 
     Args:
-        df (pd.DataFrame): The data.
+        data (pd.DataFrame): The data.
 
     Returns:
-        df (pd.DataFrame): The data with cleaned year and value columns.
+        data (pd.DataFrame): The data with cleaned year and value columns.
     """
     # Ensure year is an integer
-    df['year'] = df['year'].str.extract(r'(\d+)', expand=False)
-    df['year'] = df['year'].astype(int)
+    data['year'] = data['year'].str.extract(r'(\d+)', expand=False)
+    data['year'] = data['year'].astype(int)
 
     # Ensure value is a float
-    df['value'] = df['value'].str.extract(r'(\d+.\d+)', expand=False)
-    df['value'] = df['value'].astype(float)
+    data['value'] = data['value'].str.extract(r'(\d+.\d+)', expand=False)
+    data['value'] = data['value'].astype(float)
 
     # drop rows with missing values
-    df.dropna(inplace=True)
+    data.dropna(inplace=True)
 
-    return df
+    return data
 
-def _select_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
+def _select_region(data: pd.DataFrame, region: str) -> pd.DataFrame:
     """Select the region.
 
     Args:
-        df (pd.DataFrame): The data.
+        data (pd.DataFrame): The data.
         region (str): The region to select.
 
     Returns:
-        df (pd.DataFrame): The data with only the specified region.
+        data (pd.DataFrame): The data with only the specified region.
 
     Raises:
         ValueError: If the region is not in the data.
     """
-    if region not in df['region'].unique():
-        raise ValueError(f"The region '{region}' is not found in the data. Please choose from {df['region'].unique().tolist()}")
-    
-    df = df[df['region'] == region]
+    if region not in data['region'].unique():
+        raise ValueError(f"""
+            The region '{region}' is not found in the data.
+            Please choose from {data['region'].unique().tolist()}""")
+    data = data[data['region'] == region]
 
-    return df
+    return data
 
-def _save_data_csv(data_path: str, df: pd.DataFrame, region: str) -> None:
+def _save_data_csv(data_path: str, data: pd.DataFrame, region: str) -> None:
     """Save the data to a csv file.
 
     Args:
-        df (pd.DataFrame): The data.
+        data (pd.DataFrame): The data.
     """
-    df.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
+    data.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
 
 if __name__ == '__main__': # pragma: no cover
     parser = argparse.ArgumentParser(description='Clean the data.')
-    parser.add_argument('-r', '--region', type=str, default='PT', help='The region to select. Defaults to PT.')
+    parser.add_argument(
+        '-r',
+        '--region',
+        type=str,
+        default='PT',
+        help='The region to select. Defaults to PT.'
+    )
     args = parser.parse_args()
 
     clean_data(args.region)
