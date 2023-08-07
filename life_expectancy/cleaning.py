@@ -1,8 +1,6 @@
 """Module for cleaning life expectancy data."""
-
 import argparse
 import pandas as pd
-
 
 def clean_data(region: str) -> None:
     """ Clean the data for a given region.
@@ -11,20 +9,14 @@ def clean_data(region: str) -> None:
         region: the name of the region to clean
     """
     data_path = 'life_expectancy/data'
-    full_data = _load_data(data_path)
-    full_data = _melt_table(full_data)
-    full_data = _clean_year_value_cols(full_data)
+    full_data = (
+        pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
+        .pipe(_melt_table)
+        .pipe(_clean_year_value_cols)
+        .pipe(_clean_region_col)
+    )
     region_data = _select_region(full_data, region)
     _save_data_csv(data_path, region_data, region)
-
-def _load_data(data_path: str) -> pd.DataFrame:
-    """Load the data from the data folder.
-
-    Returns:
-        data (pd.DataFrame): The data.
-    """
-    data = pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
-    return data
 
 def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to long format.
@@ -43,9 +35,10 @@ def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     data.drop('unit,sex,age,geo\\time', axis=1, inplace=True)
 
     # melt table
-    data = data.melt(id_vars=['unit', 'sex', 'age', 'region'], var_name='year', value_name='value')
-
-    return data
+    return data.melt(
+        id_vars=['unit', 'sex', 'age', 'region'],
+        var_name='year', value_name='value'
+    )
 
 def _clean_year_value_cols(data: pd.DataFrame) -> pd.DataFrame:
     """Clean the year and value columns, ensure they are of the correct type and
@@ -58,16 +51,34 @@ def _clean_year_value_cols(data: pd.DataFrame) -> pd.DataFrame:
         data (pd.DataFrame): The data with cleaned year and value columns.
     """
     # Ensure year is an integer
-    data['year'] = data['year'].str.extract(r'(\d+)', expand=False)
-    data['year'] = data['year'].astype(int)
+    data['year'] = data['year'].str.extract(
+        r'(\d+)', expand=False
+        ).astype(int)
 
     # Ensure value is a float
-    data['value'] = data['value'].str.extract(r'(\d+.\d+)', expand=False)
-    data['value'] = data['value'].astype(float)
+    data['value'] = data['value'].str.extract(
+        r'(\d+.\d+)', expand=False
+        ).astype(float)
 
     # drop rows with missing values
     data.dropna(inplace=True)
 
+    return data
+
+def _clean_region_col(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean the region column of the data.
+
+    Args:
+        data: The data to clean.
+
+    Returns:
+        The cleaned data.
+    """
+    data['region'] = data['region'].apply(
+        lambda region: region.split('_')[0]
+        )
+    
     return data
 
 def _select_region(data: pd.DataFrame, region: str) -> pd.DataFrame:
@@ -87,9 +98,7 @@ def _select_region(data: pd.DataFrame, region: str) -> pd.DataFrame:
         raise ValueError(f"""
             The region '{region}' is not found in the data.
             Please choose from {data['region'].unique().tolist()}""")
-    data = data[data['region'] == region]
-
-    return data
+    return data[data['region'] == region]
 
 def _save_data_csv(data_path: str, data: pd.DataFrame, region: str) -> None:
     """Save the data to a csv file.
