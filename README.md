@@ -1,3 +1,5 @@
+[![CI Pipeline](https://github.com/nunohelibeires/nos-lp-foundations-work/actions/workflows/CI.yml/badge.svg)](https://github.com/nunohelibeires/nos-lp-foundations-work/actions/workflows/CI.yml)
+
 # Foundations Learning Path Assignments
 
 ## Introduction
