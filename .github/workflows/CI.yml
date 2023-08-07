@@ -1,6 +1,6 @@
 # .github/workflows/python-ci.yml
 
-name: Python CI
+name: Tests & Linters
 
 on:
   push:
