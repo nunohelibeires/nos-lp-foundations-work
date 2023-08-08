@@ -78,7 +78,7 @@ def _clean_region_col(data: pd.DataFrame) -> pd.DataFrame:
     data['region'] = data['region'].apply(
         lambda region: region.split('_')[0]
         )
-    
+
     return data
 
 def _select_region(data: pd.DataFrame, region: str) -> pd.DataFrame:
