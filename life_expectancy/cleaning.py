@@ -2,35 +2,21 @@
 import argparse
 import pandas as pd
 
-def main(region: str) -> None:
-    """Main function."""
-    full_data = _load_data('life_expectancy/data')
-    region_data = _clean_data(full_data, region)
-    _save_data_csv('life_expectancy/data', region_data, region)
-
-def _clean_data(data: pd.DataFrame, region: str) -> pd.DataFrame:
-    """ Clean the data and return only a given region.
+def clean_data(region: str) -> None:
+    """ Clean the data for a given region.
 
     Args:
         region: the name of the region to clean
     """
+    data_path = 'life_expectancy/data'
     full_data = (
-        data
+        pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
         .pipe(_melt_table)
         .pipe(_clean_year_value_cols)
         .pipe(_clean_region_col)
     )
     region_data = _select_region(full_data, region)
-
-    return region_data
-
-def _load_data(data_path: str) -> pd.DataFrame:
-    """Load the data.
-
-    Returns:
-        data (pd.DataFrame): The data.
-    """
-    return pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
+    _save_data_csv(data_path, region_data, region)
 
 def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to long format.
@@ -133,4 +119,4 @@ if __name__ == '__main__': # pragma: no cover
     )
     args = parser.parse_args()
 
-    main(args.region)
+    clean_data(args.region)
