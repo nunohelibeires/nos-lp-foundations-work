@@ -27,7 +27,7 @@ def clean_data(data: pd.DataFrame, region: str) -> None:
         .pipe(_clean_year_value_cols)
         .pipe(_clean_region_col)
     )
-    region_data = _select_region(full_data, region)
+    region_data = _select_region(full_data, region).reset_index(drop=True)
 
     return region_data
 
