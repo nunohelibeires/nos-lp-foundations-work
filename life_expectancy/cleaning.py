@@ -2,18 +2,9 @@
 import argparse
 import pandas as pd
 
+from life_expectancy.data import load_data, save_data_csv
+
 DATA_PATH = 'life_expectancy/data'
-
-def load_data(data_path: str) -> pd.DataFrame:
-    """Load the data.
-
-    Args:
-        data_path: The path to the data.
-
-    Returns:
-        The data.
-    """
-    return pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
 
 def clean_data(data: pd.DataFrame, region: str) -> None:
     """ Clean the data for a given region.
@@ -30,14 +21,6 @@ def clean_data(data: pd.DataFrame, region: str) -> None:
     region_data = _select_region(full_data, region).reset_index(drop=True)
 
     return region_data
-
-def save_data_csv(data_path: str, data: pd.DataFrame, region: str) -> None:
-    """Save the data to a csv file.
-
-    Args:
-        data (pd.DataFrame): The data.
-    """
-    data.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
 
 def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to long format.

@@ -1,5 +1,4 @@
 """Input/Output operations for fixtures generation."""
-# %%
 import pandas as pd
 
 from life_expectancy.cleaning import clean_data
@@ -11,7 +10,7 @@ def create_raw_sample_data():
     sample_data.to_csv(f'{FIXTURES_DIR}/eu_life_expectancy_raw_sample.tsv', sep='\t', index=False)
 create_raw_sample_data()
 
-# %%
+
 REGION = 'PT'
 def create_expected_clean_data():
     """Create expected clean data."""
@@ -19,7 +18,8 @@ def create_expected_clean_data():
         data = pd.read_table(f'{FIXTURES_DIR}/eu_life_expectancy_raw_sample.tsv'),
         region = REGION
     )
-    expected_clean_data.to_csv(f'{FIXTURES_DIR}/{REGION.lower()}_life_expectancy_expected.csv', index=False)
+    expected_clean_data.to_csv(
+        f'{FIXTURES_DIR}/{REGION.lower()}_life_expectancy_expected.csv',
+        index=False
+    )
 create_expected_clean_data()
-
-# %%
