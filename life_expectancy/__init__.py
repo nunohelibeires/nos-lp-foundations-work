@@ -1,3 +1,4 @@
+"""Package for life expectancy data."""
 from pathlib import Path
 
 
