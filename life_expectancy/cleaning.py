@@ -2,21 +2,42 @@
 import argparse
 import pandas as pd
 
-def clean_data(region: str) -> None:
+DATA_PATH = 'life_expectancy/data'
+
+def load_data(data_path: str) -> pd.DataFrame:
+    """Load the data.
+
+    Args:
+        data_path: The path to the data.
+
+    Returns:
+        The data.
+    """
+    return pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
+
+def clean_data(data: pd.DataFrame, region: str) -> None:
     """ Clean the data for a given region.
 
     Args:
         region: the name of the region to clean
     """
-    data_path = 'life_expectancy/data'
     full_data = (
-        pd.read_table(f'{data_path}/eu_life_expectancy_raw.tsv')
+        data
         .pipe(_melt_table)
         .pipe(_clean_year_value_cols)
         .pipe(_clean_region_col)
     )
     region_data = _select_region(full_data, region)
-    _save_data_csv(data_path, region_data, region)
+
+    return region_data
+
+def save_data_csv(data_path: str, data: pd.DataFrame, region: str) -> None:
+    """Save the data to a csv file.
+
+    Args:
+        data (pd.DataFrame): The data.
+    """
+    data.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
 
 def _melt_table(data: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to long format.
@@ -100,14 +121,6 @@ def _select_region(data: pd.DataFrame, region: str) -> pd.DataFrame:
             Please choose from {data['region'].unique().tolist()}""")
     return data[data['region'] == region]
 
-def _save_data_csv(data_path: str, data: pd.DataFrame, region: str) -> None:
-    """Save the data to a csv file.
-
-    Args:
-        data (pd.DataFrame): The data.
-    """
-    data.to_csv(f'{data_path}/{region.lower()}_life_expectancy.csv', index=False)
-
 if __name__ == '__main__': # pragma: no cover
     parser = argparse.ArgumentParser(description='Clean the data.')
     parser.add_argument(
@@ -119,4 +132,9 @@ if __name__ == '__main__': # pragma: no cover
     )
     args = parser.parse_args()
 
-    clean_data(args.region)
+    cleaned_data = clean_data(
+        data=load_data(DATA_PATH),
+        region=args.region
+    )
+
+    save_data_csv(DATA_PATH, cleaned_data, args.region)
