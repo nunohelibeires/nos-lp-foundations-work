@@ -3,8 +3,8 @@ import argparse
 import pandas as pd
 
 from life_expectancy.data import load_data, save_data_csv
+from life_expectancy import DATA_DIR
 
-DATA_PATH = 'life_expectancy/data'
 
 def clean_data(data: pd.DataFrame, region: str) -> None:
     """ Clean the data for a given region.
@@ -116,8 +116,8 @@ if __name__ == '__main__': # pragma: no cover
     args = parser.parse_args()
 
     cleaned_data = clean_data(
-        data=load_data(DATA_PATH),
+        data=load_data(DATA_DIR),
         region=args.region
     )
 
-    save_data_csv(DATA_PATH, cleaned_data, args.region)
+    save_data_csv(DATA_DIR, cleaned_data, args.region)
