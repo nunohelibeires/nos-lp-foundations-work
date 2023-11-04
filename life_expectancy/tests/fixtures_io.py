@@ -22,4 +22,3 @@ def create_expected_clean_data():
         f'{FIXTURES_DIR}/{REGION.lower()}_life_expectancy_expected.csv',
         index=False
     )
-create_expected_clean_data()
