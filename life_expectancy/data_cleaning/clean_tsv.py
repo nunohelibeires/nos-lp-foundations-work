@@ -1,12 +1,4 @@
 """Module to clean TSV/CSV files"""
-# %%
-import os
-from pathlib import Path
-
-os.chdir(Path(__file__).parent.parent.parent)
-os.getcwd()
-
-# %%
 import pandas as pd
 from life_expectancy.data_cleaning.abstract import AbstractCleaner
 
