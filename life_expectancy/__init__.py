@@ -68,5 +68,9 @@ class Country(Enum):
     @classmethod
     def actual_countries(cls):
         """Return a list of actual country enums, excluding aggregates."""
-        aggregates = {"EU27_2020", "DE_TOT", "EA18", "EA19", "EFTA", "EEA30_2007", "EEA31", "EU27_2007", "EU28", "FX"}
+        aggregates = {
+            "EU27_2020", "DE_TOT", "EA18", "EA19",
+            "EFTA", "EEA30_2007", "EEA31", "EU27_2007",
+            "EU28", "FX"
+        }
         return [country for country in cls if country.name not in aggregates]
