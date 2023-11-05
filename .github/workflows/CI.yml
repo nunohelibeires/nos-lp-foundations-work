@@ -65,4 +65,4 @@ jobs:
 
     - name: Run pylint
       run: |
-        pylint life_expectancy/
+        pylint life_expectancy/ --fail-under=7.0
