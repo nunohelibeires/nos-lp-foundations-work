@@ -14,3 +14,7 @@ class AbstractCleaner(ABC):
     @abstractmethod
     def _load_raw_data(self) -> pd.DataFrame:
         """Abstract method to load data from file"""
+
+    @abstractmethod
+    def _unpack_dq_flags(self) -> pd.DataFrame:
+        """Unpack flag_detail column into seperate bool data quality flags."""

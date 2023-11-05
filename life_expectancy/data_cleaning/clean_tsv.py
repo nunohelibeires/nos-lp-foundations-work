@@ -1,4 +1,12 @@
 """Module to clean TSV/CSV files"""
+# %%
+import os
+from pathlib import Path
+
+os.chdir(Path(__file__).parent.parent.parent)
+os.getcwd()
+
+# %%
 import pandas as pd
 from life_expectancy.data_cleaning.abstract import AbstractCleaner
 
@@ -12,6 +20,8 @@ class TSVCleaner(AbstractCleaner):
     def clean(self) -> pd.DataFrame:
         cleand_data = self.raw_data.copy()
         cleand_data = self._melt_table(cleand_data)
+        cleand_data = self._extract_map_dq_flag_detail(cleand_data)
+        cleand_data = self._unpack_dq_flags(cleand_data)
         cleand_data = self._clean_year_value_cols(cleand_data)
         cleand_data = self._clean_region_col(cleand_data)
         cleand_data = self._rename_cols(cleand_data)
@@ -39,6 +49,53 @@ class TSVCleaner(AbstractCleaner):
             id_vars=['unit', 'sex', 'age', 'region'],
             var_name='year', value_name='value'
         )
+    
+    def _extract_map_dq_flag_detail(self, cleand_data: pd.DataFrame) -> pd.DataFrame:
+        """Extract data quality flag and map to a more descriptive flag.
+
+        Args:
+            cleand_data (pd.DataFrame): Cleaned life expectancy data
+
+        Returns:
+            pd.DataFrame: Cleaned life expectancy data with data quality
+            flag detail column
+        """
+        cleand_data[['value','flag']] = cleand_data['value'].str.split(' ', expand=True)
+
+        flag_detail_dict = {
+            'b': 'break in time series',
+            'ep': 'estimated, provisional',
+            'p': 'provisional',
+            'e': 'estimated',
+            'bep': 'break in time series, estimated, provisional'
+        }
+        cleand_data['flag_detail'] = cleand_data['flag'].map(flag_detail_dict)
+
+        return cleand_data
+    
+    def _unpack_dq_flags(self, cleand_data: pd.DataFrame) -> pd.DataFrame:
+        """Unpack flag_detail column into seperate bool data quality flags.
+
+        Args:
+            cleand_data (pd.DataFrame): Cleaned life expectancy data
+
+        Returns:
+            pd.DataFrame: Cleaned data df with data quality flags
+        """
+        # unpack descriptive flags into boolean data quality flags
+        flag_dict = {
+            'flg_ts_break': 'break in time series',
+            'flg_estimated': 'estimated',
+            'flg_provisional': 'provisional'
+        }
+
+        for flag in ["flg_ts_break", "flg_estimated", "flg_provisional"]:
+            cleand_data[flag] = cleand_data['flag_detail'].str.contains(flag_dict[flag])
+            cleand_data[flag].fillna(False, inplace=True)
+
+        return cleand_data.drop(columns=[
+            'flag', 'flag_detail'
+        ])
 
     def _clean_year_value_cols(self, cleand_data: pd.DataFrame) -> pd.DataFrame:
         """Clean the year and value columns, ensure they are of the correct type and
@@ -82,6 +139,14 @@ class TSVCleaner(AbstractCleaner):
         return cleand_data
 
     def _rename_cols(self, cleand_data: pd.DataFrame) -> pd.DataFrame:
+        """Rename final columns for life expectancy data from TSV file
+
+        Args:
+            cleand_data (pd.DataFrame): Cleaned life expectancy data
+
+        Returns:
+            pd.DataFrame: Cleaned life expectancy data with renamed cols
+        """
         return cleand_data.rename(
             columns={
             'region': 'country',
