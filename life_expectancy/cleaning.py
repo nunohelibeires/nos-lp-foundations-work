@@ -1,7 +1,7 @@
 """Life Expectancy data cleaning pipeline"""
 
 import pandas as pd
-from life_expectancy import DATA_DIR, JSON_FILE_NAME, TSV_FILE_NAME
+from life_expectancy import DATA_DIR, JSON_FILE_NAME, TSV_FILE_NAME, Country
 from life_expectancy.data_cleaning.abstract import AbstractCleaner
 from life_expectancy.data_cleaning.clean_json import JSONCleaner
 from life_expectancy.data_cleaning.clean_tsv import TSVCleaner
@@ -10,13 +10,14 @@ from life_expectancy.data_cleaning.clean_tsv import TSVCleaner
 class LifeExpectancyCleaning:
     def __init__(
             self,
-            country: str,
+            country: Country,
             cleaning_strategy: AbstractCleaner
     ) -> None:
         self.country = country
         self.cleaning_strategy = cleaning_strategy
+        self._validate_cleaning_strategy()
 
-    def load_clean_export(self) -> None:
+    def load_clean_filter_export(self) -> None:
         if self.cleaning_strategy == "tsv":
             strategy = TSVCleaner(
                 file_name = TSV_FILE_NAME
@@ -28,14 +29,35 @@ class LifeExpectancyCleaning:
 
         cleand_data = strategy.clean()
 
-        self._export_cleand_data_to_csv()
+        cleand_data = self._filter_country(self.country, cleand_data)
+
+        self._export_cleand_data_to_csv(cleand_data)
 
     def _export_cleand_data_to_csv(self, cleand_data: pd.DataFrame) -> None:
         cleand_data.to_csv(
-            f'{DATA_DIR}/{self.country.lower()}_life_expectancy.csv',
+            f'{DATA_DIR}/{self.country.value.lower()}_life_expectancy.csv',
             index=False
         )
 
-# TODO: parser
-# TODO: country ENUM
-# TODO: testing
+    def _filter_country(self, country: Country, cleand_data: pd.DataFrame) -> pd.DataFrame:
+        if self.country not in Country.actual_countries():
+            raise ValueError(
+                f"""
+                The country '{self.country}' is not supported.
+                Please choose from {', '.join(Country.actual_countries())}
+                """
+            )
+        
+        return cleand_data[
+            cleand_data['country'] == country.value
+        ].reset_index(drop=True)
+        
+    def _validate_cleaning_strategy(self) -> None:
+        """Validate cleaning strategy string"""
+        if self.cleaning_strategy not in ["tsv", "json"]:
+            raise ValueError(
+                """
+                Invalid cleaning strategy.
+                Choose from 'json' or 'tsv'.
+                """
+            )
